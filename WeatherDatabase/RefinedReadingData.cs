@@ -8,14 +8,14 @@ namespace WeatherDatabase
 {
     public class RefinedReadingData
     {
-        public int SortOrder { get; set; }
-        public int StationIdentifier { get; set; }
+        public int SortOrder { get; set; }                  // Irrelevant
+        public int StationID { get; set; }
         public string StationName { get; set; }
         public string ReadingTime { get; set; }
         public string ReadingDate { get; set; }
-        public DateTime ReadingDateTime { get; set; } //aifstime_utc
-        public double Stationlattitude { get; set; }
-        public double Stationlongitude { get; set; }
+        public DateTime ReadingDateTime { get; set; }
+        public double Stationlattitude { get; set; }        //GOTO Stations table
+        public double Stationlongitude { get; set; }        //GOTO Stations table
         public float ApparentTemperature { get; set; }
         public float DeltaT { get; set; }
         public int WindGustKmh { get; set; }

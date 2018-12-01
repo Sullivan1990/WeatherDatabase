@@ -18,6 +18,7 @@ namespace WeatherDatabase
         string tempArchiveName = $"C:\\New Folder\\temp{DateTime.Now.DayOfWeek.ToString()}.tgz";
         const string extractPath = tempArchivePath + "Temp\\";
         List<Station> stationlist = new List<Station>();
+
         public void FolderCheck()
         {
             bool exists = Directory.Exists(extractPath);
@@ -75,9 +76,13 @@ namespace WeatherDatabase
                 return false;
             }
         }
-
         public void Folderactions()
         {
+            /*TODO Read the Lattitude and Longitude data from the .AXF file
+                   Write the list of objects into the database
+                   Test SQL is working as it should
+                   and test the Database is being created
+            */
             FolderCheck();
             string[] Data = Directory.GetFiles(tempArchivePath + "Temp\\", "*.axf");
             for (int x = 0; x < Data.Length; x++)
@@ -98,14 +103,13 @@ namespace WeatherDatabase
 
                         splitstring = lines2[11].Split('"');
                         string Identification = splitstring[1];
-
-                        newStation.Identifier = splitstring[1];
-
-                        // MessageBox.Show(name + " " + Identification);
-                        if (!(Identification.Equals("QLD")))
+                        
+                        if(!(splitstring[1].Equals("QLD")))
                         {
+                            newStation.Identifier = Convert.ToInt32(splitstring[1]);
                             stationlist.Add(newStation);
                         }
+
                         break;
                     }
                     i++;
@@ -117,20 +121,39 @@ namespace WeatherDatabase
         {
             return !Directory.EnumerateFileSystemEntries(extractPath).Any();
         }
+
+        public void StationLocation (List<RawReadingData> RawList)
+        {
+            foreach (Station station in stationlist)
+            {
+                foreach(RawReadingData reading in RawList)
+                {
+                    if (station.Identifier == Convert.ToInt32(reading.wmo))
+                    {
+                        station.Lattitude = float.Parse(reading.lat);
+                        station.Longitude = float.Parse(reading.lon);
+                        Console.WriteLine($"{station.Name}, {station.Lattitude}, {station.Longitude}");
+                        break;
+                    }
+                }
+            }
+        }
         public List<RefinedReadingData> MessyConversion(List<RawReadingData> RawList)
         {
             List<RefinedReadingData> BetterList = new List<RefinedReadingData>();
+          
             foreach (RawReadingData reading in RawList)
             {
                 RefinedReadingData BetterReading = new RefinedReadingData();
-                BetterReading.SortOrder = Convert.ToInt32(reading.sort_order);
-                BetterReading.StationIdentifier = Convert.ToInt32(reading.wmo);
+
+                //BetterReading.SortOrder = Convert.ToInt32(reading.sort_order);
+                BetterReading.StationID = Convert.ToInt32(reading.wmo);
                 BetterReading.StationName = reading.name;
                 BetterReading.ReadingDateTime = DateTime.ParseExact(reading.aifstime_local, "yyyyMMddHHmmss", CultureInfo.InvariantCulture); //20181130213000
                 BetterReading.ReadingDate = BetterReading.ReadingDateTime.ToShortDateString();
                 BetterReading.ReadingTime = BetterReading.ReadingDateTime.ToShortTimeString();
-                BetterReading.Stationlattitude = Convert.ToDouble(reading.lat);
-                BetterReading.Stationlongitude = Convert.ToDouble(reading.lon);
+                //BetterReading.Stationlattitude = Convert.ToDouble(reading.lat);
+                //BetterReading.Stationlongitude = Convert.ToDouble(reading.lon);
                 if (reading.apparent_t == null || reading.apparent_t.Equals("")) { BetterReading.ApparentTemperature = 0.0f; }
                 else { BetterReading.ApparentTemperature = float.Parse(reading.apparent_t); }
                 if (reading.delta_t == null || reading.delta_t.Equals("")) { BetterReading.DeltaT = 0.0f; }
@@ -178,6 +201,7 @@ namespace WeatherDatabase
                 {
                     string Fileident = $"{extractPath}IDQ60910.{WPO}.json";
                     List<RawReadingData> Rawlist = JSONtoOBJ.Objectify(Fileident);
+                    StationLocation(Rawlist);
                     List<RefinedReadingData> bindingList = MessyConversion(Rawlist);
                     for (int k = 0; k < 40; k++)
                     {

@@ -9,6 +9,8 @@ namespace WeatherDatabase
     public class Station
     {
         public string Name { get; set; }
-        public string Identifier { get; set; }
+        public int Identifier { get; set; }
+        public float Lattitude { get; set; }
+        public float Longitude { get; set; }
     }
 }
