@@ -12,5 +12,7 @@ namespace WeatherDatabase
         public int Identifier { get; set; }
         public float Lattitude { get; set; }
         public float Longitude { get; set; }
+
     }
+    
 }

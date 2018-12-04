@@ -10,6 +10,10 @@ namespace WeatherDatabase
 {
     public class Database
     {
+        public static void FirstRun()
+        {
+
+        }
         public static int CheckTableEmpty(string TableName)
         {
             string checkempty = $"SELECT COUNT (*) FROM {TableName}";
@@ -20,8 +24,7 @@ namespace WeatherDatabase
         }
         public static void StationData(List<Station> newStations)
         {
-            if (CheckTableEmpty("Stations")==0)
-            {
+
                 SQLiteConnection db = DatabaseCon.GetConnection();
                 db.Open();
                 SQLiteTransaction trans = db.BeginTransaction();
@@ -29,8 +32,9 @@ namespace WeatherDatabase
                 {
                     for (int i = 0; i < newStations.Count; i++)
                     {
-                        string adddataQuery = $"INSERT INTO Stations (Name, Identifier, Lattitude, Longitude) VALUES ({newStations[i].Name}, {newStations[i].Identifier}, {newStations[i].Lattitude}, {newStations[i].Longitude})";
+                        string adddataQuery = $"INSERT INTO Stations (Name, Identifier, Lattitude, Longitude) VALUES ('{newStations[i].Name}', {newStations[i].Identifier}, 1, 1)";
                         db.Execute(adddataQuery, transaction: trans);
+                        //trans.Commit();
                     }
                     trans.Commit();
                 }
@@ -39,7 +43,15 @@ namespace WeatherDatabase
                     trans.Rollback();
                 }
 
-            }
+            
+        }
+        public static long QueryLastReading()
+        {
+            SQLiteConnection db = DatabaseCon.GetConnection();
+            db.Open();
+            string querylast = "SELECT ReadingTimeIdent FROM Readings ORDER BY ReadingTimeIdent DESC LIMIT 1";
+            long steve = db.QuerySingle<long>(querylast);
+            return steve;
         }
     }   
 }

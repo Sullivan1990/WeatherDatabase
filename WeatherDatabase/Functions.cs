@@ -18,6 +18,7 @@ namespace WeatherDatabase
         string tempArchiveName = $"C:\\New Folder\\temp{DateTime.Now.DayOfWeek.ToString()}.tgz";
         const string extractPath = tempArchivePath + "Temp\\";
         List<Station> stationlist = new List<Station>();
+        List<RefinedReadingData> BetterList = new List<RefinedReadingData>();
 
         public void FolderCheck()
         {
@@ -44,11 +45,12 @@ namespace WeatherDatabase
 
             gzipStream.Close();
             inStream.Close();
-            Console.WriteLine("Press enter to smash the screen with Weather Stations");
-            Console.ReadKey();
+            // Console.WriteLine("Press enter to smash the screen with Weather Stations");
+            // Console.ReadKey();
         }
         public bool FTPDownload()
         {
+
             try
             {
                 Console.WriteLine("Downloading Files...........");
@@ -75,6 +77,7 @@ namespace WeatherDatabase
                 Console.WriteLine(ex.Message);
                 return false;
             }
+
         }
         public void Folderactions()
         {
@@ -109,8 +112,8 @@ namespace WeatherDatabase
                             newStation.Identifier = Convert.ToInt32(splitstring[1]);
                             stationlist.Add(newStation);
                         }
-
-                        break;
+                        
+                        break; // this just works, Don't remove it
                     }
                     i++;
                 }
@@ -132,7 +135,7 @@ namespace WeatherDatabase
                     {
                         station.Lattitude = float.Parse(reading.lat);
                         station.Longitude = float.Parse(reading.lon);
-                        Console.WriteLine($"{station.Name}, {station.Lattitude}, {station.Longitude}");
+                        // Console.WriteLine($"{station.Name}, {station.Lattitude}, {station.Longitude}");
                         break;
                     }
                 }
@@ -140,8 +143,7 @@ namespace WeatherDatabase
         }
         public List<RefinedReadingData> MessyConversion(List<RawReadingData> RawList)
         {
-            List<RefinedReadingData> BetterList = new List<RefinedReadingData>();
-          
+                     
             foreach (RawReadingData reading in RawList)
             {
                 RefinedReadingData BetterReading = new RefinedReadingData();
@@ -152,6 +154,7 @@ namespace WeatherDatabase
                 BetterReading.ReadingDateTime = DateTime.ParseExact(reading.aifstime_local, "yyyyMMddHHmmss", CultureInfo.InvariantCulture); //20181130213000
                 BetterReading.ReadingDate = BetterReading.ReadingDateTime.ToShortDateString();
                 BetterReading.ReadingTime = BetterReading.ReadingDateTime.ToShortTimeString();
+                BetterReading.ReadingTimeIdent = Convert.ToInt64(reading.aifstime_local);
                 //BetterReading.Stationlattitude = Convert.ToDouble(reading.lat);
                 //BetterReading.Stationlongitude = Convert.ToDouble(reading.lon);
                 if (reading.apparent_t == null || reading.apparent_t.Equals("")) { BetterReading.ApparentTemperature = 0.0f; }
@@ -174,6 +177,7 @@ namespace WeatherDatabase
                 BetterReading.WindSpeedKt = Convert.ToInt32(reading.wind_spd_kt);
                 BetterList.Add(BetterReading);
             }
+            // Database.CheckTableEmpty("Readings");
             return BetterList;
         }
         public void ListConvert(string inputstring)
@@ -203,38 +207,45 @@ namespace WeatherDatabase
                     List<RawReadingData> Rawlist = JSONtoOBJ.Objectify(Fileident);
                     StationLocation(Rawlist);
                     List<RefinedReadingData> bindingList = MessyConversion(Rawlist);
+                    DatabaseCon.BuildReadings(BetterList);
                     for (int k = 0; k < 40; k++)
                     {
-                        Console.Write("*");
+                        //Console.Write("*");
                     }
-                    Console.WriteLine("");
-                    Console.WriteLine(StationName);
+                    //Console.WriteLine("");
+                    //Console.WriteLine(StationName);
                     int l = 0;
                     for (int j = bindingList.Count- 1; j > 0; j--)
                     {
                         
-                         Console.WriteLine($"{bindingList[j].ReadingDate}/{bindingList[j].ReadingTime} -- Air Temp: {bindingList[j].ActualTemperature.ToString()},Relative Humidity: {bindingList[j].RelativeHumidity.ToString()},App Temp {bindingList[j].ApparentTemperature.ToString()}");
+                         //Console.WriteLine($"{bindingList[j].ReadingDate}/{bindingList[j].ReadingTime} -- Air Temp: {bindingList[j].ActualTemperature.ToString()},Relative Humidity: {bindingList[j].RelativeHumidity.ToString()},App Temp {bindingList[j].ApparentTemperature.ToString()}");
 
                     }
                     for (int k = 0; k < 20; k++)
                     {
-                        Console.Write("*");
+                        //Console.Write("*");
                     }
-                    Console.Read();
-                    Console.Read();
+                    //Console.Read();
+                    //Console.Read();
                 }
                 
             }
         }
         public void DisplayStations()
         {
-            Console.WriteLine("Available weather stations:\n\n");
+            if ((Database.CheckTableEmpty("Stations") == 0) && (Database.CheckTableEmpty("Readings") == 0)) 
+            {
+                FirstRun();
+            }
+            //Console.WriteLine("Available weather stations:\n\n");
             for (int i = 0; i < stationlist.Count; i++)
             {
-
-                Console.Write(stationlist[i].Name + "\n\n");
-
+                //Console.Write(stationlist[i].Name + "\n\n");
             }
+            ListConvert("Brisbane");
+
+
+
         }
         public void FileCheck()
         {
@@ -253,11 +264,17 @@ namespace WeatherDatabase
                 Folderactions();
                 string yesterday = (DateTime.Now.DayOfWeek - 1).ToString();
                 File.Delete(tempArchivePath + "temp" + yesterday + ".tgz");
+
             }
             else
             {
                 Folderactions();
             }
+        }
+        public void FirstRun()
+        {
+             DatabaseCon.BuildStations(stationlist);
+             
         }
     }
 }

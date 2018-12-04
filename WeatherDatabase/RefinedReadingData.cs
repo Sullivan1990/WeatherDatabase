@@ -8,12 +8,13 @@ namespace WeatherDatabase
 {
     public class RefinedReadingData
     {
-        public int SortOrder { get; set; }                  // Irrelevant
+        // public int SortOrder { get; set; }                  // Irrelevant
         public int StationID { get; set; }
         public string StationName { get; set; }
         public string ReadingTime { get; set; }
         public string ReadingDate { get; set; }
         public DateTime ReadingDateTime { get; set; }
+        public long ReadingTimeIdent { get; set; }
         public double Stationlattitude { get; set; }        //GOTO Stations table
         public double Stationlongitude { get; set; }        //GOTO Stations table
         public float ApparentTemperature { get; set; }

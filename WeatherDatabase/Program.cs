@@ -18,11 +18,15 @@ namespace WeatherDatabase
 
         static void Main(string[] args)
         {
-            Functions apple = new Functions();
-            apple.FileCheck();
-            apple.DisplayStations();
-            Console.WriteLine("Please enter a station you would like to record:\n\n");
-            apple.ListConvert(Console.ReadLine());
+            Functions Application = new Functions();
+
+            Application.FileCheck();
+            Application.DisplayStations();
+            
+            // Console.WriteLine("Please enter a station you would like to record:\n\n");
+
+            // Originally .ListConvert(Console.ReadLine())
+
         }
 
 
