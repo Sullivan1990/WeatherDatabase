@@ -18,7 +18,7 @@ namespace WeatherDatabase
         string tempArchiveName = $"C:\\New Folder\\temp{DateTime.Now.DayOfWeek.ToString()}.tgz";
         const string extractPath = tempArchivePath + "Temp\\";
         List<Station> stationlist = new List<Station>();
-        List<RefinedReadingData> BetterList = new List<RefinedReadingData>();
+        List<ReadingDatav2> BetterList = new List<ReadingDatav2>();
 
         public void FolderCheck()
         {
@@ -30,6 +30,7 @@ namespace WeatherDatabase
                 Console.WriteLine("Creating necessary Folders");
                
             }
+
                
             
         }
@@ -141,20 +142,34 @@ namespace WeatherDatabase
                 }
             }
         }
-        public List<RefinedReadingData> MessyConversion(List<RawReadingData> RawList)
+        public List<ReadingDatav2> MessyConversion(List<RawReadingData> RawList)
         {
                      
             foreach (RawReadingData reading in RawList)
             {
-                RefinedReadingData BetterReading = new RefinedReadingData();
-
+                ReadingDatav2 BetterReading = new ReadingDatav2();
+                string datetimeNumber = "";
                 //BetterReading.SortOrder = Convert.ToInt32(reading.sort_order);
                 BetterReading.StationID = Convert.ToInt32(reading.wmo);
                 BetterReading.StationName = reading.name;
-                BetterReading.ReadingDateTime = DateTime.ParseExact(reading.aifstime_local, "yyyyMMddHHmmss", CultureInfo.InvariantCulture); //20181130213000
-                BetterReading.ReadingDate = BetterReading.ReadingDateTime.ToShortDateString();
-                BetterReading.ReadingTime = BetterReading.ReadingDateTime.ToShortTimeString();
+                //BetterReading.ReadingDateTime = DateTime.ParseExact(reading.aifstime_local, "yyyyMMddHHmmss", CultureInfo.InvariantCulture); //20181130213000
+                //BetterReading.ReadingDate = BetterReading.ReadingDateTime.ToShortDateString();
+                //BetterReading.ReadingTime = BetterReading.ReadingDateTime.ToShortTimeString();
                 BetterReading.ReadingTimeIdent = Convert.ToInt64(reading.aifstime_local);
+                datetimeNumber = BetterReading.ReadingTimeIdent.ToString();
+                BetterReading.ReadingYear = Convert.ToInt16(datetimeNumber.Substring(0, 4));
+                BetterReading.ReadingMonth = Convert.ToInt16(datetimeNumber.Substring(4, 2));
+                BetterReading.ReadingDay = Convert.ToInt16(datetimeNumber.Substring(6, 2));
+                // datetimeNumber.Substring
+                if (datetimeNumber.Substring(10, 1).Equals("0"))
+                {
+                    BetterReading.ReadingTime = Convert.ToDouble(datetimeNumber.Substring(8, 2));
+                }
+                else
+                {
+                    BetterReading.ReadingTime = Convert.ToDouble(datetimeNumber.Substring(8, 2));
+                    BetterReading.ReadingTime += 0.5;
+                }
                 //BetterReading.Stationlattitude = Convert.ToDouble(reading.lat);
                 //BetterReading.Stationlongitude = Convert.ToDouble(reading.lon);
                 if (reading.apparent_t == null || reading.apparent_t.Equals("")) { BetterReading.ApparentTemperature = 0.0f; }
@@ -169,7 +184,9 @@ namespace WeatherDatabase
                 else { BetterReading.DewPoint = float.Parse(reading.dewpt); }
                 if (reading.press == null || reading.press.Equals("")) { BetterReading.PressureHpa = 0.0f; }
                 else { BetterReading.PressureHpa = float.Parse(reading.press); }
-                BetterReading.RainFallmm = reading.rain_trace;
+
+                string[] Rainfallsplit = reading.rain_trace.Split('"');
+                BetterReading.RainFallmm = Convert.ToDouble(Rainfallsplit[0]);
                 BetterReading.RelativeHumidity = Convert.ToInt32(reading.rel_hum);
                 BetterReading.BasicForecast = reading.weather;
                 BetterReading.WindDirection = reading.wind_dir;
@@ -206,47 +223,45 @@ namespace WeatherDatabase
                     string Fileident = $"{extractPath}IDQ60910.{WPO}.json";
                     List<RawReadingData> Rawlist = JSONtoOBJ.Objectify(Fileident);
                     StationLocation(Rawlist);
-                    List<RefinedReadingData> bindingList = MessyConversion(Rawlist);
+                    List<ReadingDatav2> bindingList = MessyConversion(Rawlist);
                     DatabaseCon.BuildReadings(BetterList);
-                    for (int k = 0; k < 40; k++)
-                    {
-                        //Console.Write("*");
-                    }
+                    //for (int k = 0; k < 40; k++)
+                    //{
+                    //    Console.Write("*");
+                    //}
                     //Console.WriteLine("");
                     //Console.WriteLine(StationName);
-                    int l = 0;
-                    for (int j = bindingList.Count- 1; j > 0; j--)
-                    {
+                    //int l = 0;
+                    //for (int j = bindingList.Count- 1; j > 0; j--)
+                    //{
                         
-                         //Console.WriteLine($"{bindingList[j].ReadingDate}/{bindingList[j].ReadingTime} -- Air Temp: {bindingList[j].ActualTemperature.ToString()},Relative Humidity: {bindingList[j].RelativeHumidity.ToString()},App Temp {bindingList[j].ApparentTemperature.ToString()}");
+                    //     Console.WriteLine($"{bindingList[j].ReadingDate}/{bindingList[j].ReadingTime} -- Air Temp: {bindingList[j].ActualTemperature.ToString()},Relative Humidity: {bindingList[j].RelativeHumidity.ToString()},App Temp {bindingList[j].ApparentTemperature.ToString()}");
 
-                    }
-                    for (int k = 0; k < 20; k++)
-                    {
-                        //Console.Write("*");
-                    }
+                    //}
+                    //for (int k = 0; k < 20; k++)
+                    //{
+                    //    Console.Write("*");
+                    //}
                     //Console.Read();
                     //Console.Read();
                 }
                 
             }
         }
-        public void DisplayStations()
-        {
-            if ((Database.CheckTableEmpty("Stations") == 0) && (Database.CheckTableEmpty("Readings") == 0)) 
-            {
-                FirstRun();
-            }
-            //Console.WriteLine("Available weather stations:\n\n");
-            for (int i = 0; i < stationlist.Count; i++)
-            {
-                //Console.Write(stationlist[i].Name + "\n\n");
-            }
-            ListConvert("Brisbane");
+        //public void DisplayStations()
+        //{
+        //    if ((Database.CheckTableEmpty("Stations") == 0) && (Database.CheckTableEmpty("Brisbane") == 0)) 
+        //    {
+        //        FirstRun();
+        //    }
+        //    Console.WriteLine("Available weather stations:\n\n");
+        //    for (int i = 0; i < stationlist.Count; i++)
+        //    {
+        //        Console.Write(stationlist[i].Name + "\n\n");
+        //    }
+        //    ListConvert("Brisbane");
+        //}
 
-
-
-        }
         public void FileCheck()
         {
             FolderCheck();

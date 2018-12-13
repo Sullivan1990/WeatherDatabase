@@ -33,7 +33,7 @@ namespace WeatherDatabase
         public static void BuildTables()
         {
             SQLiteConnection db = GetConnection();
-            const string DEFAULT_SCHEMA_TABLES = "CREATE TABLE 'Readings' ( `ReadingID` INTEGER PRIMARY KEY AUTOINCREMENT, `StationID` INTEGER, `StationName` TEXT, 'ReadingTimeIdent' INTEGER, `ApparentTemperature` NUMERIC, `DeltaT` NUMERIC, `WindGustKmh` INTEGER, `WindGustKt` INTEGER, `ActualTemperature` NUMERIC, `DewPoint` NUMERIC, `PressureHpa` NUMERIC, `RainFallmm` TEXT, `RelativeHumidity` INTEGER, `BasicForecast` TEXT, `WindDirection` TEXT, `WindSpeedKmh` INTEGER, `WindSpeedKts` INTEGER)";
+            const string DEFAULT_SCHEMA_TABLES = "CREATE TABLE 'Brisbane' ( `ReadingID` INTEGER PRIMARY KEY AUTOINCREMENT, `StationID` INTEGER, `StationName` TEXT, 'ReadingTimeIdent' INTEGER, `ApparentTemperature` NUMERIC, `DeltaT` NUMERIC, `WindGustKmh` INTEGER, `WindGustKt` INTEGER, `ActualTemperature` NUMERIC, `DewPoint` NUMERIC, `PressureHpa` NUMERIC, `RainFallmm` TEXT, `RelativeHumidity` INTEGER, `BasicForecast` TEXT, `WindDirection` TEXT, `WindSpeedKmh` INTEGER, `WindSpeedKts` INTEGER)";
             const string StationTable = "CREATE TABLE 'Stations' ( `Name` TEXT NOT NULL UNIQUE, `Identifier` INTEGER PRIMARY KEY, `Lattitude` NUMERIC, `Longitude` NUMERIC)"; // , PRIMARY KEY(`Identifier`)";
             db.Execute(DEFAULT_SCHEMA_TABLES);
             db.Execute(StationTable);
@@ -59,7 +59,7 @@ namespace WeatherDatabase
             }
         }
 
-        public static void BuildReadings(List<RefinedReadingData> Buildlist)
+        public static void BuildReadings(List<ReadingDatav2> Buildlist)
         {
             SQLiteConnection db = DatabaseCon.GetConnection();
             db.Open();
@@ -67,7 +67,7 @@ namespace WeatherDatabase
             try
             {
                 long LastDate;
-                if (Database.CheckTableEmpty("Readings") == 0)
+                if (Database.CheckTableEmpty("Brisbane") == 0)
                 {
                     LastDate = 0;
                 }
@@ -79,13 +79,13 @@ namespace WeatherDatabase
                 int count = 0;
                 for (int i = Buildlist.Count - 1; i > 0; i--)
                 {
-                    RefinedReadingData newData = new RefinedReadingData();
+                    ReadingDatav2 newData = new ReadingDatav2();
                     newData = Buildlist[i];
                     if (newData.ReadingTimeIdent > LastDate || LastDate == 0)
                     {
-                        string insertReading = $"INSERT INTO Readings (StationID, StationName, ReadingTimeIdent, ApparentTemperature, DeltaT, WindGustKmh, WindGustKt, ActualTemperature, DewPoint, PressureHpa, RainFallmm, RelativeHumidity, BasicForecast, WindDirection, WindSpeedKmh, WindSpeedKts)" +
-                        $" VALUES ({newData.StationID}, '{newData.StationName}', {newData.ReadingTimeIdent}, {newData.ApparentTemperature}, {newData.DeltaT}, {newData.WindGustKmh}, {newData.WindGustKt}, {newData.ActualTemperature}, {newData.DewPoint}, {newData.PressureHpa}, '{newData.RainFallmm}', {newData.RelativeHumidity}, '{newData.BasicForecast}', '{newData.WindDirection}', {newData.WindSpeedKmh}, {newData.WindSpeedKt})";
-                        db.Execute(insertReading, transaction: trans);
+                        string insertLine = $"INSERT INTO Brisbane (StationID, StationName, ReadingTimeIdent, ReadingYear, ReadingMonth, ReadingDay, ReadingTime, ApparentTemperature, DeltaT, WindGustKmh, WindGustKt, ActualTemperature, DewPoint, PressureHpa, RainFallmm, RelativeHumidity, BasicForecast, WindDirection, WindSpeedKmh, WindSpeedKts)" +
+                                $" VALUES ({newData.StationID}, '{newData.StationName}', {newData.ReadingTimeIdent}, {newData.ReadingYear}, {newData.ReadingMonth}, {newData.ReadingDay}, {newData.ReadingTime}, {newData.ApparentTemperature}, {newData.DeltaT}, {newData.WindGustKmh}, {newData.WindGustKt}, {newData.ActualTemperature}, {newData.DewPoint}, {newData.PressureHpa}, '{newData.RainFallmm}', {newData.RelativeHumidity}, '{newData.BasicForecast}', '{newData.WindDirection}', {newData.WindSpeedKmh}, {newData.WindSpeedKt})";
+                        db.Execute(insertLine);
                         count++;
                     }
 
