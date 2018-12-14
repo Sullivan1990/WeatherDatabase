@@ -196,7 +196,7 @@ namespace WeatherDatabase
                 BetterList.Add(BetterReading);
             }
             // Database.CheckTableEmpty("Readings");
-            DatabaseCon.BuildReadings(BetterList);
+            Database.BuildReadings(BetterList);
             return BetterList;
         }
         public void ListConvert(string inputstring)
@@ -226,7 +226,7 @@ namespace WeatherDatabase
                     List<RawReadingData> Rawlist = JSONtoOBJ.Objectify(Fileident);
                     StationLocation(Rawlist);
                     List<ReadingDatav2> bindingList = MessyConversion(Rawlist);
-                    DatabaseCon.BuildReadings(BetterList);
+                    Database.BuildReadings(BetterList);
                     //for (int k = 0; k < 40; k++)
                     //{
                     //    Console.Write("*");
@@ -290,7 +290,7 @@ namespace WeatherDatabase
         }
         public void FirstRun()
         {
-             DatabaseCon.BuildStations(stationlist);
+             Database.BuildStations(stationlist);
              
         }
     }

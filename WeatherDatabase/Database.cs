@@ -10,8 +10,103 @@ namespace WeatherDatabase
 {
     public class Database
     {
-        public static void FirstRun()
+        //TODO Method to read in Suburb lat and lang from .csv file
+            // filtering by QLD to suit the station's only being QLD stations
+
+        //TODO Method to calculate the difference between each suburb lat and long
+            // and compare to each stations lat and long
+            // find the three closest stations based on lat and long diff
+
+        //TODO Method to present the user a selection of the 3 closest stations
+            // using this selection to build the first reading table
+            // maybe even allowing for multiple picks, up to 3, creating 3 tables
+        
+        //TODO Set up the saving of these stations names and entered postcode
+            // in the App.Config file
+            // can use to check that the database contains matching tables
+
+        //TODO Create a basic GUI for entering a postcode
+            // GUI should allow for some basic testing queries
+            // and testing of some graphing
+
+        //TODO investigate htmlscraping vs using the JSON files for single suburb databases.
+
+        public static void BuildTables()
         {
+            SQLiteConnection db = DatabaseCon.GetConnection();
+            const string DEFAULT_SCHEMA_TABLES = "CREATE TABLE 'Brisbane' ( `ReadingID` INTEGER PRIMARY KEY AUTOINCREMENT, `StationID` INTEGER, `StationName` TEXT, 'ReadingTimeIdent' INTEGER, `ApparentTemperature` NUMERIC, `DeltaT` NUMERIC, `WindGustKmh` INTEGER, `WindGustKt` INTEGER, `ActualTemperature` NUMERIC, `DewPoint` NUMERIC, `PressureHpa` NUMERIC, `RainFallmm` TEXT, `RelativeHumidity` INTEGER, `BasicForecast` TEXT, `WindDirection` TEXT, `WindSpeedKmh` INTEGER, `WindSpeedKts` INTEGER)";
+            const string StationTable = "CREATE TABLE 'Stations' ( `Name` TEXT NOT NULL UNIQUE, `Identifier` INTEGER PRIMARY KEY, `Lattitude` NUMERIC, `Longitude` NUMERIC)"; // , PRIMARY KEY(`Identifier`)";
+            db.Execute(DEFAULT_SCHEMA_TABLES);
+            db.Execute(StationTable);
+        }
+        public static void BuildStations(List<Station> newStations)
+        {
+            SQLiteConnection db = DatabaseCon.GetConnection();
+            db.Open();
+            SQLiteTransaction trans = db.BeginTransaction();
+            try
+            {
+                for (int i = 0; i < newStations.Count; i++)
+                {
+                    string adddataQuery = $"INSERT INTO Stations (Name, Identifier, Lattitude, Longitude) VALUES ('{newStations[i].Name}', {newStations[i].Identifier}, 1, 1)";
+                    db.Execute(adddataQuery, transaction: trans);
+                    //trans.Commit();
+                }
+                trans.Commit();
+            }
+            catch
+            {
+                trans.Rollback();
+            }
+        }
+        public static void BuildReadings(List<ReadingDatav2> Buildlist)
+        {
+            SQLiteConnection db = DatabaseCon.GetConnection();
+            db.Open();
+            SQLiteTransaction trans = db.BeginTransaction();
+            try
+            {
+                long LastDate;
+                if (Database.CheckTableEmpty("Brisbane") == 0)
+                {
+                    LastDate = 0;
+                }
+                else
+                {
+                    LastDate = Database.QueryLastReading();
+                }
+
+                int count = 0;
+                for (int i = Buildlist.Count - 1; i > 0; i--)
+                {
+                    ReadingDatav2 newData = new ReadingDatav2();
+                    newData = Buildlist[i];
+                    if (newData.ReadingTimeIdent > LastDate || LastDate == 0)
+                    {
+                        string insertLine = $"INSERT INTO Brisbane (StationID, StationName, ReadingTimeIdent, ReadingYear, ReadingMonth, ReadingDay, ReadingTime, ApparentTemperature, DeltaT, WindGustKmh, WindGustKt, ActualTemperature, DewPoint, PressureHpa, RainFallmm, RelativeHumidity, BasicForecast, WindDirection, WindSpeedKmh, WindSpeedKts)" +
+                                $" VALUES ({newData.StationID}, '{newData.StationName}', {newData.ReadingTimeIdent}, {newData.ReadingYear}, {newData.ReadingMonth}, {newData.ReadingDay}, {newData.ReadingTime}, {newData.ApparentTemperature}, {newData.DeltaT}, {newData.WindGustKmh}, {newData.WindGustKt}, {newData.ActualTemperature}, {newData.DewPoint}, {newData.PressureHpa}, '{newData.RainFallmm}', {newData.RelativeHumidity}, '{newData.BasicForecast}', '{newData.WindDirection}', {newData.WindSpeedKmh}, {newData.WindSpeedKt})";
+                        db.Execute(insertLine);
+                        count++;
+                    }
+
+                }
+                trans.Commit();
+                if (count == 0)
+                {
+                    Console.WriteLine("The database is up to date");
+                }
+                else
+                {
+                    Console.WriteLine(count + " Entries added to the database");
+                }
+                Console.Read();
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                trans.Rollback();
+            }
 
         }
         public static void CheckTableExists()

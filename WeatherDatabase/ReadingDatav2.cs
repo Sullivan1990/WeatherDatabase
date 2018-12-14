@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WeatherDatabase
 {
-    class ReadingDatav2
+    public class ReadingDatav2
     {
         public int StationID { get; set; }
         public string StationName { get; set; }
