@@ -91,6 +91,7 @@ namespace WeatherDatabase
 
                 }
                 Console.WriteLine(count);
+                Console.Read();
                 trans.Commit();
             }
             catch (Exception ex)

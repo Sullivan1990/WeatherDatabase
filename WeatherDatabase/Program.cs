@@ -21,7 +21,7 @@ namespace WeatherDatabase
             Functions Application = new Functions();
 
             Application.FileCheck();
-            Application.DisplayStations();
+           // Application.DisplayStations();
             
             // Console.WriteLine("Please enter a station you would like to record:\n\n");
 

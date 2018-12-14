@@ -119,6 +119,7 @@ namespace WeatherDatabase
                     i++;
                 }
             }
+            ListConvert("Brisbane");
 
         }
         public bool IsDirectoryEmpty()
@@ -195,6 +196,7 @@ namespace WeatherDatabase
                 BetterList.Add(BetterReading);
             }
             // Database.CheckTableEmpty("Readings");
+            DatabaseCon.BuildReadings(BetterList);
             return BetterList;
         }
         public void ListConvert(string inputstring)
