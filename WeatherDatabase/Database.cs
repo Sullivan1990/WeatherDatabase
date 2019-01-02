@@ -34,10 +34,11 @@ namespace WeatherDatabase
         public static void BuildTables()
         {
             SQLiteConnection db = DatabaseCon.GetConnection();
-            const string DEFAULT_SCHEMA_TABLES = "CREATE TABLE 'Brisbane' ( `ReadingID` INTEGER PRIMARY KEY AUTOINCREMENT, `StationID` INTEGER, `StationName` TEXT, 'ReadingTimeIdent' INTEGER, `ApparentTemperature` NUMERIC, `DeltaT` NUMERIC, `WindGustKmh` INTEGER, `WindGustKt` INTEGER, `ActualTemperature` NUMERIC, `DewPoint` NUMERIC, `PressureHpa` NUMERIC, `RainFallmm` TEXT, `RelativeHumidity` INTEGER, `BasicForecast` TEXT, `WindDirection` TEXT, `WindSpeedKmh` INTEGER, `WindSpeedKts` INTEGER)";
+            const string DEFAULT_SCHEMA_TABLES = "CREATE TABLE 'Brisbane' ( `ReadingID` INTEGER PRIMARY KEY AUTOINCREMENT, `StationID` INTEGER, `StationName` TEXT, 'ReadingTimeIdent' INTEGER, 'ReadingYear' INTEGER, 'ReadingMonth' INTEGER, 'ReadingDay' INTEGER, 'ReadingTime' NUMERIC, `ApparentTemperature` NUMERIC, `DeltaT` NUMERIC, `WindGustKmh` INTEGER, `WindGustKt` INTEGER, `ActualTemperature` NUMERIC, `DewPoint` NUMERIC, `PressureHpa` NUMERIC, `RainFallmm` TEXT, `RelativeHumidity` INTEGER, `BasicForecast` TEXT, `WindDirection` TEXT, `WindSpeedKmh` INTEGER, `WindSpeedKts` INTEGER)";
             const string StationTable = "CREATE TABLE 'Stations' ( `Name` TEXT NOT NULL UNIQUE, `Identifier` INTEGER PRIMARY KEY, `Lattitude` NUMERIC, `Longitude` NUMERIC)"; // , PRIMARY KEY(`Identifier`)";
             db.Execute(DEFAULT_SCHEMA_TABLES);
             db.Execute(StationTable);
+
         }
         public static void BuildStations(List<Station> newStations)
         {
@@ -53,9 +54,11 @@ namespace WeatherDatabase
                     //trans.Commit();
                 }
                 trans.Commit();
+                Logging.Log("Stations added to the database");
             }
-            catch
+            catch(Exception ex)
             {
+                Logging.Log("ERROR", "Station insertion Error", ex.Message);
                 trans.Rollback();
             }
         }
@@ -94,10 +97,12 @@ namespace WeatherDatabase
                 if (count == 0)
                 {
                     Console.WriteLine("The database is up to date");
+                    Logging.Log("The Database is up to date");
                 }
                 else
                 {
                     Console.WriteLine(count + " Entries added to the database");
+                    Logging.Log(count + " Entries added to the database");
                 }
                 Console.Read();
 
@@ -105,6 +110,7 @@ namespace WeatherDatabase
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Logging.Log("ERROR", "Reading Insertion Error", ex.Message); 
                 trans.Rollback();
             }
 
@@ -118,6 +124,7 @@ namespace WeatherDatabase
             {
                 string makeNewTable = $"CREATE TABLE 'Brisbane'( `ReadingID` INTEGER PRIMARY KEY AUTOINCREMENT, `StationID` INTEGER, `StationName` TEXT, 'ReadingTimeIdent' INTEGER, 'ReadingYear' INTEGER, 'ReadingMonth' INTEGER, 'ReadingDay' INTEGER, 'ReadingTime' INTEGER, `ApparentTemperature` NUMERIC, `DeltaT` NUMERIC, `WindGustKmh` INTEGER, `WindGustKt` INTEGER, `ActualTemperature` NUMERIC, `DewPoint` NUMERIC, `PressureHpa` NUMERIC, `RainFallmm` NUMERIC, `RelativeHumidity` INTEGER, `BasicForecast` TEXT, `WindDirection` TEXT, `WindSpeedKmh` INTEGER, `WindSpeedKts` INTEGER)";
                 db.Execute(makeNewTable);
+                Logging.Log("'Brisbane' Table created");
             }
         }
         public static int CheckTableEmpty(string TableName)

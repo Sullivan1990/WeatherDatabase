@@ -13,34 +13,42 @@ namespace WeatherDatabase
     {
         public static List<RawReadingData> Objectify(string fileName)
         {
-            string loadText = File.ReadAllText(fileName);
-
-            // Read the entire document into a JObject
-            JObject EntireBOMdocument = JObject.Parse(loadText);
-
-
-            // Pick out the section we want, here it is "data" under the parent of "observations"
-            // and saves all of the seperate instances in a list 
-            List<JToken> seperateReadings = EntireBOMdocument["observations"]["data"].Children().ToList();
-
-
-            // Instantiated list of ActalObj
-            List<RawReadingData> readingObjects = new List<RawReadingData>();
-            // For each Token seperated item in the string
-            foreach (JToken readings in seperateReadings)
+            try
             {
-                // parse the line into an object
-                RawReadingData singleReading = readings.ToObject<RawReadingData>();
-                // Add the newly created object to a list of objects
-                readingObjects.Add(singleReading);
+                string loadText = File.ReadAllText(fileName);
+
+                // Read the entire document into a JObject
+                JObject EntireBOMdocument = JObject.Parse(loadText);
+
+
+                // Pick out the section we want, here it is "data" under the parent of "observations"
+                // and saves all of the seperate instances in a list 
+                List<JToken> seperateReadings = EntireBOMdocument["observations"]["data"].Children().ToList();
+
+
+                // Instantiated list of ActalObj
+                List<RawReadingData> readingObjects = new List<RawReadingData>();
+                // For each Token seperated item in the string
+                foreach (JToken readings in seperateReadings)
+                {
+                    // parse the line into an object
+                    RawReadingData singleReading = readings.ToObject<RawReadingData>();
+                    // Add the newly created object to a list of objects
+                    readingObjects.Add(singleReading);
+                }
+                // for each newly created object in the list of objects
+                foreach (RawReadingData displayReading in readingObjects)
+                {
+                    // display the air temp + Humidity
+                    //Console.WriteLine(displayReading.air_temp + "," + displayReading.apparent_t);
+                }
+                return readingObjects;
             }
-            // for each newly created object in the list of objects
-            foreach (RawReadingData displayReading in readingObjects)
+            catch (Exception ex)
             {
-                // display the air temp + Humidity
-                //Console.WriteLine(displayReading.air_temp + "," + displayReading.apparent_t);
+                Logging.Log("ERROR", "JSON to OBJ ERROR", ex.Message);
+                throw;
             }
-            return readingObjects;
         }
     }
 

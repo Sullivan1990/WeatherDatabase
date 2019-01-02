@@ -36,18 +36,27 @@ namespace WeatherDatabase
         }
         public void ExtractTGZ(String gzArchiveName, String destFolder)
         {
-            Console.WriteLine("Extracting Files...........");
-            Stream inStream = File.OpenRead(gzArchiveName);
-            Stream gzipStream = new GZipInputStream(inStream);
+            try
+            {
+                Console.WriteLine("Extracting Files...........");
+                
+                Stream inStream = File.OpenRead(gzArchiveName);
+                Stream gzipStream = new GZipInputStream(inStream);
 
-            TarArchive tarArchive = TarArchive.CreateInputTarArchive(gzipStream);
-            tarArchive.ExtractContents(destFolder);
-            tarArchive.Close();
+                TarArchive tarArchive = TarArchive.CreateInputTarArchive(gzipStream);
+                tarArchive.ExtractContents(destFolder);
+                tarArchive.Close();
 
-            gzipStream.Close();
-            inStream.Close();
-            // Console.WriteLine("Press enter to smash the screen with Weather Stations");
-            // Console.ReadKey();
+                gzipStream.Close();
+                inStream.Close();
+                Logging.Log("Extracting Files");
+            }
+            catch (Exception ex)
+            {
+                Logging.Log("ERROR", "Extraction Error", ex.ToString());
+                throw;
+            }
+
         }
         public bool FTPDownload()
         {
@@ -71,11 +80,12 @@ namespace WeatherDatabase
                 file.Close();
                 responseStream.Close();
                 response.Close();
+                Logging.Log("File Download Sucessful");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Logging.Log("ERROR", "File Download ERROR", ex.Message);
                 return false;
             }
 
@@ -145,59 +155,66 @@ namespace WeatherDatabase
         }
         public List<ReadingDatav2> MessyConversion(List<RawReadingData> RawList)
         {
-                     
-            foreach (RawReadingData reading in RawList)
+            try
             {
-                ReadingDatav2 BetterReading = new ReadingDatav2();
-                string datetimeNumber = "";
-                //BetterReading.SortOrder = Convert.ToInt32(reading.sort_order);
-                BetterReading.StationID = Convert.ToInt32(reading.wmo);
-                BetterReading.StationName = reading.name;
-                //BetterReading.ReadingDateTime = DateTime.ParseExact(reading.aifstime_local, "yyyyMMddHHmmss", CultureInfo.InvariantCulture); //20181130213000
-                //BetterReading.ReadingDate = BetterReading.ReadingDateTime.ToShortDateString();
-                //BetterReading.ReadingTime = BetterReading.ReadingDateTime.ToShortTimeString();
-                BetterReading.ReadingTimeIdent = Convert.ToInt64(reading.aifstime_local);
-                datetimeNumber = BetterReading.ReadingTimeIdent.ToString();
-                BetterReading.ReadingYear = Convert.ToInt16(datetimeNumber.Substring(0, 4));
-                BetterReading.ReadingMonth = Convert.ToInt16(datetimeNumber.Substring(4, 2));
-                BetterReading.ReadingDay = Convert.ToInt16(datetimeNumber.Substring(6, 2));
-                // datetimeNumber.Substring
-                if (datetimeNumber.Substring(10, 1).Equals("0"))
+                foreach (RawReadingData reading in RawList)
                 {
-                    BetterReading.ReadingTime = Convert.ToDouble(datetimeNumber.Substring(8, 2));
-                }
-                else
-                {
-                    BetterReading.ReadingTime = Convert.ToDouble(datetimeNumber.Substring(8, 2));
-                    BetterReading.ReadingTime += 0.5;
-                }
-                //BetterReading.Stationlattitude = Convert.ToDouble(reading.lat);
-                //BetterReading.Stationlongitude = Convert.ToDouble(reading.lon);
-                if (reading.apparent_t == null || reading.apparent_t.Equals("")) { BetterReading.ApparentTemperature = 0.0f; }
-                else { BetterReading.ApparentTemperature = float.Parse(reading.apparent_t); }
-                if (reading.delta_t == null || reading.delta_t.Equals("")) { BetterReading.DeltaT = 0.0f; }
-                else { BetterReading.DeltaT = float.Parse(reading.delta_t); }
-                BetterReading.WindGustKmh = Convert.ToInt32(reading.gust_kmh);
-                BetterReading.WindGustKt = Convert.ToInt32(reading.gust_kt);
-                if (reading.air_temp == null || reading.air_temp.Equals("")) { BetterReading.ActualTemperature = 0.0f; }
-                else { BetterReading.ActualTemperature = float.Parse(reading.air_temp); }
-                if (reading.dewpt == null || reading.dewpt.Equals("")) { BetterReading.DewPoint = 0.0f; }
-                else { BetterReading.DewPoint = float.Parse(reading.dewpt); }
-                if (reading.press == null || reading.press.Equals("")) { BetterReading.PressureHpa = 0.0f; }
-                else { BetterReading.PressureHpa = float.Parse(reading.press); }
+                    ReadingDatav2 BetterReading = new ReadingDatav2();
+                    string datetimeNumber = "";
+                    //BetterReading.SortOrder = Convert.ToInt32(reading.sort_order);
+                    BetterReading.StationID = Convert.ToInt32(reading.wmo);
+                    BetterReading.StationName = reading.name;
+                    //BetterReading.ReadingDateTime = DateTime.ParseExact(reading.aifstime_local, "yyyyMMddHHmmss", CultureInfo.InvariantCulture); //20181130213000
+                    //BetterReading.ReadingDate = BetterReading.ReadingDateTime.ToShortDateString();
+                    //BetterReading.ReadingTime = BetterReading.ReadingDateTime.ToShortTimeString();
+                    BetterReading.ReadingTimeIdent = Convert.ToInt64(reading.aifstime_local);
+                    datetimeNumber = BetterReading.ReadingTimeIdent.ToString();
+                    BetterReading.ReadingYear = Convert.ToInt16(datetimeNumber.Substring(0, 4));
+                    BetterReading.ReadingMonth = Convert.ToInt16(datetimeNumber.Substring(4, 2));
+                    BetterReading.ReadingDay = Convert.ToInt16(datetimeNumber.Substring(6, 2));
+                    // datetimeNumber.Substring
+                    if (datetimeNumber.Substring(10, 1).Equals("0"))
+                    {
+                        BetterReading.ReadingTime = Convert.ToDouble(datetimeNumber.Substring(8, 2));
+                    }
+                    else
+                    {
+                        BetterReading.ReadingTime = Convert.ToDouble(datetimeNumber.Substring(8, 2));
+                        BetterReading.ReadingTime += 0.5;
+                    }
+                    //BetterReading.Stationlattitude = Convert.ToDouble(reading.lat);
+                    //BetterReading.Stationlongitude = Convert.ToDouble(reading.lon);
+                    if (reading.apparent_t == null || reading.apparent_t.Equals("")) { BetterReading.ApparentTemperature = 0.0f; }
+                    else { BetterReading.ApparentTemperature = float.Parse(reading.apparent_t); }
+                    if (reading.delta_t == null || reading.delta_t.Equals("")) { BetterReading.DeltaT = 0.0f; }
+                    else { BetterReading.DeltaT = float.Parse(reading.delta_t); }
+                    BetterReading.WindGustKmh = Convert.ToInt32(reading.gust_kmh);
+                    BetterReading.WindGustKt = Convert.ToInt32(reading.gust_kt);
+                    if (reading.air_temp == null || reading.air_temp.Equals("")) { BetterReading.ActualTemperature = 0.0f; }
+                    else { BetterReading.ActualTemperature = float.Parse(reading.air_temp); }
+                    if (reading.dewpt == null || reading.dewpt.Equals("")) { BetterReading.DewPoint = 0.0f; }
+                    else { BetterReading.DewPoint = float.Parse(reading.dewpt); }
+                    if (reading.press == null || reading.press.Equals("")) { BetterReading.PressureHpa = 0.0f; }
+                    else { BetterReading.PressureHpa = float.Parse(reading.press); }
 
-                string[] Rainfallsplit = reading.rain_trace.Split('"');
-                BetterReading.RainFallmm = Convert.ToDouble(Rainfallsplit[0]);
-                BetterReading.RelativeHumidity = Convert.ToInt32(reading.rel_hum);
-                BetterReading.BasicForecast = reading.weather;
-                BetterReading.WindDirection = reading.wind_dir;
-                BetterReading.WindSpeedKmh = Convert.ToInt32(reading.wind_spd_kmh);
-                BetterReading.WindSpeedKt = Convert.ToInt32(reading.wind_spd_kt);
-                BetterList.Add(BetterReading);
+                    string[] Rainfallsplit = reading.rain_trace.Split('"');
+                    BetterReading.RainFallmm = Convert.ToDouble(Rainfallsplit[0]);
+                    BetterReading.RelativeHumidity = Convert.ToInt32(reading.rel_hum);
+                    BetterReading.BasicForecast = reading.weather;
+                    BetterReading.WindDirection = reading.wind_dir;
+                    BetterReading.WindSpeedKmh = Convert.ToInt32(reading.wind_spd_kmh);
+                    BetterReading.WindSpeedKt = Convert.ToInt32(reading.wind_spd_kt);
+                    BetterList.Add(BetterReading);
+                }
+                // Database.CheckTableEmpty("Readings");
+                Database.BuildReadings(BetterList);
+                return BetterList;
             }
-            // Database.CheckTableEmpty("Readings");
-            Database.BuildReadings(BetterList);
-            return BetterList;
+            catch (Exception ex)
+            {
+                Logging.Log("ERROR", "MessyConversion ERROR", ex.Message);
+                throw;
+            }
         }
         public void ListConvert(string inputstring)
         {
@@ -279,9 +296,10 @@ namespace WeatherDatabase
                 FTPDownload();
                 ExtractTGZ(tempArchiveName, tempArchivePath + "Temp\\");
                 Folderactions();
+                Logging.Log("Files Downloaded and unzipped");
                 string yesterday = (DateTime.Now.DayOfWeek - 1).ToString();
                 File.Delete(tempArchivePath + "temp" + yesterday + ".tgz");
-
+                Logging.Log("Old Files deleted");
             }
             else
             {
