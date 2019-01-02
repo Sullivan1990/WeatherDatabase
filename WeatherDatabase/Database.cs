@@ -12,6 +12,7 @@ namespace WeatherDatabase
     {
         //TODO Method to read in Suburb lat and lang from .csv file
             // filtering by QLD to suit the station's only being QLD stations
+        
 
         //TODO Method to calculate the difference between each suburb lat and long
             // and compare to each stations lat and long
@@ -58,7 +59,7 @@ namespace WeatherDatabase
             }
             catch(Exception ex)
             {
-                Logging.Log("ERROR", "Station insertion Error", ex.Message);
+                Logging.LogEr("Station insertion Error", ex.Message);
                 trans.Rollback();
             }
         }
@@ -110,7 +111,7 @@ namespace WeatherDatabase
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                Logging.Log("ERROR", "Reading Insertion Error", ex.Message); 
+                Logging.LogEr("Reading Insertion Error", ex.Message); 
                 trans.Rollback();
             }
 
@@ -145,7 +146,7 @@ namespace WeatherDatabase
             {
                 for (int i = 0; i < newStations.Count; i++)
                 {
-                    string adddataQuery = $"INSERT INTO Stations (Name, Identifier, Lattitude, Longitude) VALUES ('{newStations[i].Name}', {newStations[i].Identifier}, 1, 1)";
+                    string adddataQuery = $"INSERT INTO Stations (Name, Identifier, Lattitude, Longitude) VALUES ('{newStations[i].Name}', {newStations[i].Identifier}, {newStations[i].Lattitude}, {newStations[i].Longitude})";
                     db.Execute(adddataQuery, transaction: trans);
                     //trans.Commit();
                 }

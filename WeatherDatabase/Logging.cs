@@ -8,7 +8,7 @@ namespace WeatherDatabase
 {
     public static class Logging
     {
-        public static void Log (string message)
+        public static void Log(string message)
         {
             using (System.IO.StreamWriter file =
               new System.IO.StreamWriter(@"LogINFO.txt", true))
@@ -33,7 +33,7 @@ namespace WeatherDatabase
                 }
             }
         }
-        public static void Log(string type, string message)
+        public static void LogEr(string message)
         {
             using (System.IO.StreamWriter file =
               new System.IO.StreamWriter(@"LogINFO.txt", true))
@@ -43,7 +43,7 @@ namespace WeatherDatabase
                     string LDate = DateTime.Now.ToShortDateString();
                     string LTime = DateTime.Now.ToString("h:mm:ss tt");
 
-                    string logMessage = $"{LDate}, {LTime}, {type}: {message}";
+                    string logMessage = $"{LDate}, {LTime}, ERROR: {message}";
                     file.WriteLine(logMessage);
                     Console.WriteLine("There has been a problem, please check the log for details");
 
@@ -59,7 +59,7 @@ namespace WeatherDatabase
                 }
             }
         }
-        public static void Log(string type, string description, string message)
+        public static void LogEr(string description, string message)
         {
             using (System.IO.StreamWriter file =
               new System.IO.StreamWriter(@"LogINFO.txt", true))
@@ -69,7 +69,7 @@ namespace WeatherDatabase
                     string LDate = DateTime.Now.ToShortDateString();
                     string LTime = DateTime.Now.ToString("h:mm:ss tt");
 
-                    string logMessage = $"{LDate}, {LTime}, {type}:, {description}, {message}";
+                    string logMessage = $"{LDate}, {LTime}, ERROR:, {description}, {message}";
                     file.WriteLine(logMessage);
                     Console.WriteLine("There has been a problem, please check the log for details");
 

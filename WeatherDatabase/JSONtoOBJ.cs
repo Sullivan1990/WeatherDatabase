@@ -46,7 +46,7 @@ namespace WeatherDatabase
             }
             catch (Exception ex)
             {
-                Logging.Log("ERROR", "JSON to OBJ ERROR", ex.Message);
+                Logging.LogEr("JSON to OBJ ERROR", ex.Message);
                 throw;
             }
         }

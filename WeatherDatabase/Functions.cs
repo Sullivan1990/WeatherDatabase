@@ -19,7 +19,7 @@ namespace WeatherDatabase
         const string extractPath = tempArchivePath + "Temp\\";
         List<Station> stationlist = new List<Station>();
         List<ReadingDatav2> BetterList = new List<ReadingDatav2>();
-
+        
         public void FolderCheck()
         {
             bool exists = Directory.Exists(extractPath);
@@ -53,7 +53,7 @@ namespace WeatherDatabase
             }
             catch (Exception ex)
             {
-                Logging.Log("ERROR", "Extraction Error", ex.ToString());
+                Logging.LogEr("Extraction Error", ex.ToString());
                 throw;
             }
 
@@ -85,7 +85,7 @@ namespace WeatherDatabase
             }
             catch (Exception ex)
             {
-                Logging.Log("ERROR", "File Download ERROR", ex.Message);
+                Logging.LogEr("File Download ERROR", ex.Message);
                 return false;
             }
 
@@ -102,15 +102,19 @@ namespace WeatherDatabase
             for (int x = 0; x < Data.Length; x++)
             {
                 string[] lines = File.ReadAllLines(Data[x]);
-                const int neededLines = 15;
-                string[] lines2 = new string[16];
+                const int stationwmoline = 15;
+                const int dataline = 26;
+                string stationIdent = "";
+                string[] lines2 = new string[27];
                 int i = 0;
+                Station newStation = new Station();
                 foreach (var s in File.ReadLines(Data[x]))
                 {
+                    
                     lines2[i] = s;
-                    if (i == neededLines)
+                    if (i == stationwmoline)
                     {
-                        Station newStation = new Station();
+                        // Station newStation = new Station();
                         string[] splitstring = lines2[10].Split('"');
                         string name = splitstring[1];
                         newStation.Name = splitstring[1];
@@ -121,14 +125,44 @@ namespace WeatherDatabase
                         if(!(splitstring[1].Equals("QLD")))
                         {
                             newStation.Identifier = Convert.ToInt32(splitstring[1]);
+                            stationIdent = splitstring[1];
+
+                        }
+
+                         // this just works, Don't remove it
+                    }
+                    if (i == dataline)
+                    {
+                        if (stationIdent.Equals("QLD") || newStation.Identifier == 0)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            string[] splitstring3 = lines2[i].Split(',');
+                            if (splitstring3[0].Equals("[$]")) break;
+                            string lat = splitstring3[8];
+                            string lon = splitstring3[9];
+                            newStation.Lattitude = float.Parse(lat);
+                            newStation.Longitude = float.Parse(lon);
                             stationlist.Add(newStation);
+                            break;
                         }
                         
-                        break; // this just works, Don't remove it
                     }
+                    
                     i++;
+                    
                 }
             }
+            foreach (Station stat in stationlist)
+            {
+                Logging.Log(stat.Name);
+                Logging.Log(stat.Identifier.ToString());
+                Logging.Log(stat.Lattitude.ToString());
+                Logging.Log(stat.Longitude.ToString());
+            }
+            Database.StationData(stationlist);
             ListConvert("Brisbane");
 
         }
@@ -137,22 +171,25 @@ namespace WeatherDatabase
             return !Directory.EnumerateFileSystemEntries(extractPath).Any();
         }
 
-        public void StationLocation (List<RawReadingData> RawList)
-        {
-            foreach (Station station in stationlist)
-            {
-                foreach(RawReadingData reading in RawList)
-                {
-                    if (station.Identifier == Convert.ToInt32(reading.wmo))
-                    {
-                        station.Lattitude = float.Parse(reading.lat);
-                        station.Longitude = float.Parse(reading.lon);
-                        // Console.WriteLine($"{station.Name}, {station.Lattitude}, {station.Longitude}");
-                        break;
-                    }
-                }
-            }
-        }
+        //public void StationLocation (List<RawReadingData> RawList)
+        //{
+            
+        //    foreach (Station station in stationlist)
+        //    {
+        //        foreach(RawReadingData reading in RawList)
+        //        {
+        //            if (station.Identifier == Convert.ToInt32(reading.wmo))
+        //            {
+        //                station.Lattitude = float.Parse(reading.lat);
+        //                station.Longitude = float.Parse(reading.lon);
+
+        //                Console.WriteLine($"{station.Name}, {station.Lattitude}, {station.Longitude}");
+        //                break;
+        //            }
+                    
+        //        }
+        //    }
+        //}
         public List<ReadingDatav2> MessyConversion(List<RawReadingData> RawList)
         {
             try
@@ -161,12 +198,8 @@ namespace WeatherDatabase
                 {
                     ReadingDatav2 BetterReading = new ReadingDatav2();
                     string datetimeNumber = "";
-                    //BetterReading.SortOrder = Convert.ToInt32(reading.sort_order);
                     BetterReading.StationID = Convert.ToInt32(reading.wmo);
                     BetterReading.StationName = reading.name;
-                    //BetterReading.ReadingDateTime = DateTime.ParseExact(reading.aifstime_local, "yyyyMMddHHmmss", CultureInfo.InvariantCulture); //20181130213000
-                    //BetterReading.ReadingDate = BetterReading.ReadingDateTime.ToShortDateString();
-                    //BetterReading.ReadingTime = BetterReading.ReadingDateTime.ToShortTimeString();
                     BetterReading.ReadingTimeIdent = Convert.ToInt64(reading.aifstime_local);
                     datetimeNumber = BetterReading.ReadingTimeIdent.ToString();
                     BetterReading.ReadingYear = Convert.ToInt16(datetimeNumber.Substring(0, 4));
@@ -212,7 +245,7 @@ namespace WeatherDatabase
             }
             catch (Exception ex)
             {
-                Logging.Log("ERROR", "MessyConversion ERROR", ex.Message);
+                Logging.LogEr("MessyConversion ERROR", ex.Message);
                 throw;
             }
         }
@@ -241,7 +274,7 @@ namespace WeatherDatabase
                 {
                     string Fileident = $"{extractPath}IDQ60910.{WPO}.json";
                     List<RawReadingData> Rawlist = JSONtoOBJ.Objectify(Fileident);
-                    StationLocation(Rawlist);
+                    //StationLocation(Rawlist);
                     List<ReadingDatav2> bindingList = MessyConversion(Rawlist);
                     Database.BuildReadings(BetterList);
                     //for (int k = 0; k < 40; k++)
