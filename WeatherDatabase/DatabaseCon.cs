@@ -17,8 +17,8 @@ namespace WeatherDatabase
             if (!System.IO.File.Exists("WeatherDatabase.db"))
             {
                 Database.BuildTables();
-                Functions functions = new Functions();
-                functions.FirstRun();
+                Functions newfunc = new Functions();
+                newfunc.getSuburbzipHTTP();
             }
         }
 

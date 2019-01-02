@@ -37,32 +37,35 @@ namespace WeatherDatabase
             SQLiteConnection db = DatabaseCon.GetConnection();
             const string DEFAULT_SCHEMA_TABLES = "CREATE TABLE 'Brisbane' ( `ReadingID` INTEGER PRIMARY KEY AUTOINCREMENT, `StationID` INTEGER, `StationName` TEXT, 'ReadingTimeIdent' INTEGER, 'ReadingYear' INTEGER, 'ReadingMonth' INTEGER, 'ReadingDay' INTEGER, 'ReadingTime' NUMERIC, `ApparentTemperature` NUMERIC, `DeltaT` NUMERIC, `WindGustKmh` INTEGER, `WindGustKt` INTEGER, `ActualTemperature` NUMERIC, `DewPoint` NUMERIC, `PressureHpa` NUMERIC, `RainFallmm` TEXT, `RelativeHumidity` INTEGER, `BasicForecast` TEXT, `WindDirection` TEXT, `WindSpeedKmh` INTEGER, `WindSpeedKts` INTEGER)";
             const string StationTable = "CREATE TABLE 'Stations' ( `Name` TEXT NOT NULL UNIQUE, `Identifier` INTEGER PRIMARY KEY, `Lattitude` NUMERIC, `Longitude` NUMERIC)"; // , PRIMARY KEY(`Identifier`)";
+            const string SuburbTable = "CREATE TABLE 'Suburb' ( 'SubID' INTEGER PRIMARY KEY AUTOINCREMENT, 'Name' TEXT NOT NULL, 'PostCode' INTEGER NOT NULL, 'Lattitude' NUMERIC, 'Longitude' NUMERIC)";
             db.Execute(DEFAULT_SCHEMA_TABLES);
             db.Execute(StationTable);
+            db.Execute(SuburbTable);
+            
 
         }
-        public static void BuildStations(List<Station> newStations)
-        {
-            SQLiteConnection db = DatabaseCon.GetConnection();
-            db.Open();
-            SQLiteTransaction trans = db.BeginTransaction();
-            try
-            {
-                for (int i = 0; i < newStations.Count; i++)
-                {
-                    string adddataQuery = $"INSERT INTO Stations (Name, Identifier, Lattitude, Longitude) VALUES ('{newStations[i].Name}', {newStations[i].Identifier}, 1, 1)";
-                    db.Execute(adddataQuery, transaction: trans);
-                    //trans.Commit();
-                }
-                trans.Commit();
-                Logging.Log("Stations added to the database");
-            }
-            catch(Exception ex)
-            {
-                Logging.LogEr("Station insertion Error", ex.Message);
-                trans.Rollback();
-            }
-        }
+        //public static void BuildStations(List<Station> newStations)
+        //{
+        //    SQLiteConnection db = DatabaseCon.GetConnection();
+        //    db.Open();
+        //    SQLiteTransaction trans = db.BeginTransaction();
+        //    try
+        //    {
+        //        for (int i = 0; i < newStations.Count; i++)
+        //        {
+        //            string adddataQuery = $"INSERT INTO Stations (Name, Identifier, Lattitude, Longitude) VALUES ('{newStations[i].Name}', {newStations[i].Identifier}, 1, 1)";
+        //            db.Execute(adddataQuery, transaction: trans);
+        //            //trans.Commit();
+        //        }
+        //        trans.Commit();
+        //        Logging.Log("Stations added to the database");
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        Logging.LogEr("Station insertion Error", ex.Message);
+        //        trans.Rollback();
+        //    }
+        //}
         public static void BuildReadings(List<ReadingDatav2> Buildlist)
         {
             SQLiteConnection db = DatabaseCon.GetConnection();
@@ -128,6 +131,17 @@ namespace WeatherDatabase
                 Logging.Log("'Brisbane' Table created");
             }
         }
+        public static bool CheckStationTableExists()
+        {
+            SQLiteConnection db = DatabaseCon.GetConnection();
+            string TableExists = "SELECT COUNT ('Name') FROM Stations";
+            var Count = db.Query<int>(TableExists);
+            if (Count.First() == 0)
+            {
+                return true;
+            }
+            else return false;
+        }
         public static int CheckTableEmpty(string TableName)
         {
             string checkempty = $"SELECT COUNT (*) FROM {TableName}";
@@ -148,12 +162,15 @@ namespace WeatherDatabase
                 {
                     string adddataQuery = $"INSERT INTO Stations (Name, Identifier, Lattitude, Longitude) VALUES ('{newStations[i].Name}', {newStations[i].Identifier}, {newStations[i].Lattitude}, {newStations[i].Longitude})";
                     db.Execute(adddataQuery, transaction: trans);
+
                     //trans.Commit();
                 }
+                Logging.Log("Stations added to the database");
                 trans.Commit();
             }
-            catch
+            catch(Exception ex)
             {
+                Logging.LogEr("Station insertion Error", ex.Message);
                 trans.Rollback();
             }
 
@@ -168,6 +185,28 @@ namespace WeatherDatabase
             return steve;
         }
 
+        public static void LoadSuburbs(List<Suburb> SubList)
+        {
+            SQLiteConnection db = DatabaseCon.GetConnection();
+            db.Open();
+            SQLiteTransaction trans = db.BeginTransaction();
+            try
+            {
+                for (int i = 0; i < SubList.Count; i++)
+                {
+                    string adddataQuery = $"INSERT INTO Suburb (Name, PostCode, Lattitude, Longitude) VALUES (@Name, @PostCode, @Lattitude, @Longitude)";
+                    db.Execute(adddataQuery,SubList[i], trans);
+                    //trans.Commit();
+                }
+                trans.Commit();
+                Logging.Log("Suburbs added to the database");
+            }
+            catch (Exception ex)
+            {
+                Logging.LogEr("Suburb insertion Error", ex.Message);
+                trans.Rollback();
+            }
+        }
         //public static void RebuildTable()
         //{
         //    try

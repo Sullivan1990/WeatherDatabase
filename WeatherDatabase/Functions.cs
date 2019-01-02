@@ -7,6 +7,7 @@ using System.IO;
 using System.Globalization;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using ICSharpCode.SharpZipLib.Zip;
 using System.Net;
 
 
@@ -34,6 +35,27 @@ namespace WeatherDatabase
                
             
         }
+        public void getSuburbzipHTTP()
+        {
+            using (var client = new WebClient())
+            {
+                client.DownloadFile("http://www.corra.com.au/downloads/Australian_Post_Codes_Lat_Lon.zip", @"C:\New Folder\Australian_Post_Codes_Lat_Lon.zip");
+            }
+            ExtractSuburbZip();
+        }
+        public void ExtractSuburbZip()
+        {
+            var zipFileName = @"C:\New Folder\Australian_Post_Codes_Lat_Lon.zip";
+            var targetDir = @"C:\New Folder";
+            FastZip fastZip = new FastZip();
+            string fileFilter = null;
+
+            // Will always overwrite if target filenames already exist
+            fastZip.ExtractZip(zipFileName, targetDir, fileFilter);
+            File.Delete("C:\\New Folder\\Australian_Post_Codes_Lat_Lon.zip");
+            LoadSuburbs();
+        }
+
         public void ExtractTGZ(String gzArchiveName, String destFolder)
         {
             try
@@ -92,11 +114,6 @@ namespace WeatherDatabase
         }
         public void Folderactions()
         {
-            /*TODO Read the Lattitude and Longitude data from the .AXF file
-                   Write the list of objects into the database
-                   Test SQL is working as it should
-                   and test the Database is being created
-            */
             FolderCheck();
             string[] Data = Directory.GetFiles(tempArchivePath + "Temp\\", "*.axf");
             for (int x = 0; x < Data.Length; x++)
@@ -114,7 +131,6 @@ namespace WeatherDatabase
                     lines2[i] = s;
                     if (i == stationwmoline)
                     {
-                        // Station newStation = new Station();
                         string[] splitstring = lines2[10].Split('"');
                         string name = splitstring[1];
                         newStation.Name = splitstring[1];
@@ -129,7 +145,6 @@ namespace WeatherDatabase
 
                         }
 
-                         // this just works, Don't remove it
                     }
                     if (i == dataline)
                     {
@@ -155,14 +170,11 @@ namespace WeatherDatabase
                     
                 }
             }
-            foreach (Station stat in stationlist)
+            if(Database.CheckStationTableExists())
             {
-                Logging.Log(stat.Name);
-                Logging.Log(stat.Identifier.ToString());
-                Logging.Log(stat.Lattitude.ToString());
-                Logging.Log(stat.Longitude.ToString());
+                Database.StationData(stationlist);
             }
-            Database.StationData(stationlist);
+            
             ListConvert("Brisbane");
 
         }
@@ -171,25 +183,8 @@ namespace WeatherDatabase
             return !Directory.EnumerateFileSystemEntries(extractPath).Any();
         }
 
-        //public void StationLocation (List<RawReadingData> RawList)
-        //{
-            
-        //    foreach (Station station in stationlist)
-        //    {
-        //        foreach(RawReadingData reading in RawList)
-        //        {
-        //            if (station.Identifier == Convert.ToInt32(reading.wmo))
-        //            {
-        //                station.Lattitude = float.Parse(reading.lat);
-        //                station.Longitude = float.Parse(reading.lon);
 
-        //                Console.WriteLine($"{station.Name}, {station.Lattitude}, {station.Longitude}");
-        //                break;
-        //            }
-                    
-        //        }
-        //    }
-        //}
+
         public List<ReadingDatav2> MessyConversion(List<RawReadingData> RawList)
         {
             try
@@ -205,7 +200,6 @@ namespace WeatherDatabase
                     BetterReading.ReadingYear = Convert.ToInt16(datetimeNumber.Substring(0, 4));
                     BetterReading.ReadingMonth = Convert.ToInt16(datetimeNumber.Substring(4, 2));
                     BetterReading.ReadingDay = Convert.ToInt16(datetimeNumber.Substring(6, 2));
-                    // datetimeNumber.Substring
                     if (datetimeNumber.Substring(10, 1).Equals("0"))
                     {
                         BetterReading.ReadingTime = Convert.ToDouble(datetimeNumber.Substring(8, 2));
@@ -215,8 +209,6 @@ namespace WeatherDatabase
                         BetterReading.ReadingTime = Convert.ToDouble(datetimeNumber.Substring(8, 2));
                         BetterReading.ReadingTime += 0.5;
                     }
-                    //BetterReading.Stationlattitude = Convert.ToDouble(reading.lat);
-                    //BetterReading.Stationlongitude = Convert.ToDouble(reading.lon);
                     if (reading.apparent_t == null || reading.apparent_t.Equals("")) { BetterReading.ApparentTemperature = 0.0f; }
                     else { BetterReading.ApparentTemperature = float.Parse(reading.apparent_t); }
                     if (reading.delta_t == null || reading.delta_t.Equals("")) { BetterReading.DeltaT = 0.0f; }
@@ -239,7 +231,6 @@ namespace WeatherDatabase
                     BetterReading.WindSpeedKt = Convert.ToInt32(reading.wind_spd_kt);
                     BetterList.Add(BetterReading);
                 }
-                // Database.CheckTableEmpty("Readings");
                 Database.BuildReadings(BetterList);
                 return BetterList;
             }
@@ -274,46 +265,13 @@ namespace WeatherDatabase
                 {
                     string Fileident = $"{extractPath}IDQ60910.{WPO}.json";
                     List<RawReadingData> Rawlist = JSONtoOBJ.Objectify(Fileident);
-                    //StationLocation(Rawlist);
                     List<ReadingDatav2> bindingList = MessyConversion(Rawlist);
                     Database.BuildReadings(BetterList);
-                    //for (int k = 0; k < 40; k++)
-                    //{
-                    //    Console.Write("*");
-                    //}
-                    //Console.WriteLine("");
-                    //Console.WriteLine(StationName);
-                    //int l = 0;
-                    //for (int j = bindingList.Count- 1; j > 0; j--)
-                    //{
-                        
-                    //     Console.WriteLine($"{bindingList[j].ReadingDate}/{bindingList[j].ReadingTime} -- Air Temp: {bindingList[j].ActualTemperature.ToString()},Relative Humidity: {bindingList[j].RelativeHumidity.ToString()},App Temp {bindingList[j].ApparentTemperature.ToString()}");
 
-                    //}
-                    //for (int k = 0; k < 20; k++)
-                    //{
-                    //    Console.Write("*");
-                    //}
-                    //Console.Read();
-                    //Console.Read();
                 }
                 
             }
         }
-        //public void DisplayStations()
-        //{
-        //    if ((Database.CheckTableEmpty("Stations") == 0) && (Database.CheckTableEmpty("Brisbane") == 0)) 
-        //    {
-        //        FirstRun();
-        //    }
-        //    Console.WriteLine("Available weather stations:\n\n");
-        //    for (int i = 0; i < stationlist.Count; i++)
-        //    {
-        //        Console.Write(stationlist[i].Name + "\n\n");
-        //    }
-        //    ListConvert("Brisbane");
-        //}
-
         public void FileCheck()
         {
             FolderCheck();
@@ -339,10 +297,34 @@ namespace WeatherDatabase
                 Folderactions();
             }
         }
-        public void FirstRun()
+
+        public void LoadSuburbs()
         {
-             Database.BuildStations(stationlist);
-             
+            List<Suburb> SubList = new List<Suburb>();
+            string[] lines = File.ReadAllLines("C:\\New Folder\\Australian_Post_Codes_Lat_Lon.csv");
+            foreach (var line in lines)
+            {
+                string[] data = line.Split(',');
+                string State = data[2].Trim('"');
+                State = State.Trim('/');
+                if (State.Equals("QLD"))
+                {
+                    Suburb NewSub = new Suburb();
+                    NewSub.Name = dataTrim(data[1]);
+                    NewSub.PostCode = Convert.ToInt32(dataTrim(data[0]));
+                    NewSub.Lattitude = float.Parse(dataTrim(data[5]));
+                    NewSub.Longitude = float.Parse(dataTrim(data[6]));
+                    SubList.Add(NewSub);
+                }
+            }
+            Database.LoadSuburbs(SubList);
+            File.Delete("C:\\New Folder\\Australian_Post_Codes_Lat_Lon.csv");
+        }
+        public string dataTrim(string data)
+        {
+            string data2 = data.Trim('/');
+            data2 = data2.Trim('"');
+            return data2;
         }
     }
 }

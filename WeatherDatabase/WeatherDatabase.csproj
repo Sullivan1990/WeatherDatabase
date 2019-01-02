@@ -68,6 +68,7 @@
     <Compile Include="RawReadingData.cs" />
     <Compile Include="ReadingDatav2.cs" />
     <Compile Include="Station.cs" />
+    <Compile Include="Suburb.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
