@@ -20,6 +20,7 @@ namespace WeatherDatabase
         const string extractPath = tempArchivePath + "Temp\\";
         List<Station> stationlist = new List<Station>();
         List<ReadingDatav2> BetterList = new List<ReadingDatav2>();
+		int celcius;
         
         public void FolderCheck()
         {
