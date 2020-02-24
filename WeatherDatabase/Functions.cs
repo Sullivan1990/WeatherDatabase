@@ -33,7 +33,7 @@ namespace WeatherDatabase
                
             }
 
-               
+               //Max comment 1
             
         }
         public void getSuburbzipHTTP()
@@ -70,7 +70,7 @@ namespace WeatherDatabase
                 TarArchive tarArchive = TarArchive.CreateInputTarArchive(gzipStream);
                 tarArchive.ExtractContents(destFolder);
                 tarArchive.Close();
-
+// Max Comment 2
                 gzipStream.Close();
                 inStream.Close();
                 Logging.Log("Extracting Files");
