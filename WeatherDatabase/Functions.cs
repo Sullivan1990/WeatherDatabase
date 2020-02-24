@@ -37,6 +37,7 @@ namespace WeatherDatabase
         }
         public void getSuburbzipHTTP()
         {
+			// This is a comment
             using (var client = new WebClient())
             {
                 client.DownloadFile("http://www.corra.com.au/downloads/Australian_Post_Codes_Lat_Lon.zip", @"C:\New Folder\Australian_Post_Codes_Lat_Lon.zip");
